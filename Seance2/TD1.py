@@ -29,7 +29,15 @@ clone = img.copy()
 points_selected = 0
 X_init = []
 cv2.namedWindow("Image initiale")
+#Comentar la sgnte linea para poner los puntos desde codigo
 cv2.setMouseCallback("Image initiale",select_points)
+'''
+X_init = [[144,  46],
+ [112, 254],
+ [369, 261],
+ [355, 47]]
+ '''
+points_selected = 4
 
 while True:
 	cv2.imshow("Image initiale",img)
@@ -41,15 +49,22 @@ while True:
 X_init = np.asarray(X_init,dtype = np.float32) 		
 print("X_init =",X_init)
 X_final = np.zeros((points_selected,2),np.float32)
+'''
 for i in range(points_selected):
 	string_input = "Correspondant de {} ? ".format(X_init[i])
 	X_final[i] = input(string_input).split(" ",2)
+'''
+X_final = np.array([[50,50],
+		  [50,350],
+		  [350,350],
+		  [350,50]],np.float32)
+
 print("X_final =",X_final)
 
 # Votre code d'estimation de H ici
 # Compute M avec chaque correspondance
-#A = np.zeros((2*points_selected,9),np.float32)
-#print(A.shape)
+A = np.zeros((2*points_selected,9),np.float32)
+print(A.shape)
 A = []
 for i in range(len(X_init)):
     ax = [-X_init[i][0], -X_init[i][1], -1, 0, 0, 0, X_final[i][0]*X_init[i][0], X_final[i][0]*X_init[i][1], X_final[i][0]]
@@ -66,11 +81,10 @@ U, S, V = np.linalg.svd(A)
 print("SVD: ", V, V.shape)
 
 # Determine H
-h=V[:,-1]
-print("h: ", h, h.shape)
-H = np.reshape(h,(3,3))
+H=V[-1,:]
+H = np.reshape(H,(3,3))
 print("H: ", H, H.shape)
-H = H/H[-1,-1] # Normalize (H divido el ultimo valor)
+H = H/V[-1, -1] # Normalize (H divido el ultimo valor)
 print("H Normalizada: ", H, H.shape)
 # Se puede interpretar la homografia: la ultima fila y columna tiene que ser cerca a 1 y se pueden ver la interpretacion de H en las diapos para decirme si hice una rotacio, translacion, etc.
 
