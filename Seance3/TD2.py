@@ -16,13 +16,13 @@ input2 = cv2.imread('MultiView/POP02.jpg') #trainimage # right image
 img1 =  cv2.cvtColor(input1,cv2.COLOR_BGR2GRAY)
 img2 =  cv2.cvtColor(input2,cv2.COLOR_BGR2GRAY)
 ###### Detection des points clefs
-kaze = cv2.KAZE_create(upright = False,#Par dÃ©faut : false
-                      threshold = 0.001,#Par dÃ©faut : 0.001
-                      nOctaves = 4,#Par dÃ©faut : 4
-                      nOctaveLayers = 4,#Par dÃ©faut : 4
-                      diffusivity = 2)#Par dÃ©faut : 2
+kaze = cv2.KAZE_create(upright = False,#Par defaut : false
+                      threshold = 0.001,#Par defaut : 0.001
+                      nOctaves = 4,#Par defaut : 4
+                      nOctaveLayers = 4,#Par defaut : 4
+                      diffusivity = 2)#Par defaut : 2
 
-# dÃ©tection des points KAZE et calcul des descripteurs M-SURF
+# detection des points KAZE et calcul des descripteurs M-SURF
 kp1, des1 = kaze.detectAndCompute(img1,None)
 kp2, des2 = kaze.detectAndCompute(img2,None)
 
@@ -54,11 +54,11 @@ draw_params = dict(matchColor = (0,255,0),
 mfilt_image = cv2.drawMatchesKnn(img1,kp1,img2,kp2,good,None,**draw_params)
 pts1 = np.float32(pts1)
 pts2 = np.float32(pts2)
-print('Nb de paires sÃ©lectionnÃ©es : ' + str(pts1.shape[0]))
+print('Nb de paires selectionnees : ' + str(pts1.shape[0]))
 
 plt.figure(figsize=(15, 5))
 plt.imshow(mfilt_image)
-plt.title('Appariement filtrÃ© : %i paires conservÃ©es' %pts1.shape[0])
+plt.title('Appariement filtre : %i paires conservees' %pts1.shape[0])
 plt.show()
 
 ##### Definition of some helper functions
@@ -100,7 +100,7 @@ def drawFundamental(img1,img2,pts1,pts2,F):
 ###### Calcul de la Matrice Fondamentale avec OpenCV RANSAC
 FRansac, mask = cv2.findFundamentalMat(pts1,pts2,cv2.FM_RANSAC,
                          ransacReprojThreshold = 0.5, # Distance max de reprojection en pixels pour un inlier 
-                         confidence = 0.99) # Niveau de confiance dÃ©sirÃ©
+                         confidence = 0.99) # Niveau de confiance desire
 print('Nb inliers RANSAC : ' + str(mask.sum()))
 
 # on affiche que les inliers
@@ -111,7 +111,7 @@ inlierpts2 = pts2[mask.ravel()==1]
 imgL, imgR = drawFundamental(img1,img2,inlierpts1,inlierpts2,FRansac)
 plt.figure(figsize=(15, 5))
 plt.subplot(121),plt.imshow(imgL)
-plt.title('Lignes Ã©pipolaires des %i inliers (gauche)' %mask.sum())
+plt.title('Lignes epipolaires des %i inliers (gauche)' %mask.sum())
 plt.subplot(122),plt.imshow(imgR)
-plt.title('Lignes Ã©pipolaires des %i inliers (droite)' %mask.sum())
+plt.title('Lignes epipolaires des %i inliers (droite)' %mask.sum())
 plt.show()
