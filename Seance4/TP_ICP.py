@@ -3,6 +3,7 @@
 
 # Import Numpy
 import numpy as np
+import time
 
 # Import library to plot in python
 from matplotlib import pyplot as plt
@@ -74,6 +75,7 @@ def show3D2(data,data_aligned,nom):
 
 # Fonction pour decimer un nuage de points
 def decimate(data,k_ech):
+
     met=True
     if met==True:    
         # 1ere methode : boucle for
@@ -89,13 +91,7 @@ def decimate(data,k_ech):
             
     else:
         #decimated = sous-tableau des colonnes espac�es de k_ech
-        res=[]
-        i=0
-        print(data.shape)
-        while i < data.shape[1]:
-            res.append(data[:,i])
-            i += k_ech
-        dec = np.stack(res, axis=1)
+        dec = data [: ,:: k_ech ]
         
     return(dec)
 
@@ -124,6 +120,7 @@ def best_rigid_transform(data, ref):
 
     # H matrix
     # calculer la matrice H
+    # La matrice H est la matrice d'homographie entre les nuages de points centrés
     H=np.dot(data_c,ref_c.T)
 
     # SVD on H
@@ -133,7 +130,8 @@ def best_rigid_transform(data, ref):
 
     # Checking R determinant
     # si le déterminant de U est -1, prendre son opposé
-    np.linalg.det(U)
+    if np.linalg.det(U)==-1:
+        U=-U
     # Getting R and T
     R=np.dot(Vt.T,U.T)
     # calculer R et T
@@ -222,6 +220,7 @@ if __name__ == '__main__':
     bunny_p=read_data_ply(bunny_p_path)
     NDC_o=read_data_ply(NDC_o_path)
     NDC_p=read_data_ply(NDC_p_path)
+    NDC_r=read_data_ply(NDC_r_path)
 
     # Visualisation du fichier d'origine
     if False:
@@ -230,18 +229,21 @@ if __name__ == '__main__':
     # Transformations : d�cimation, rotation, translation, �chelle
     # ------------------------------------------------------------
     if False:
-        # D�cimation        
+        # D�cimation       
         decimated = decimate(bunny_o,10)
-        
         # Visualisation sous Python et par �criture de fichier
         show3D2(bunny_o,decimated,"Decimated")
         
         # Visualisation sous CloudCompare apr�s �criture de fichier
-        write_data_ply(decimated,bunny_r_path)
+        write_data_ply(decimated,bunny_p_path)
         # Puis ouvrir le fichier sous CloudCompare pour le visualiser
 
     if False:
-        decimated = decimate(NDC_o,1000)
+        tiempo_inicial = time.time()       
+        decimated = decimate(NDC_o,100)
+        tiempo_final = time.time()
+        print("tiempo", tiempo_final - tiempo_inicial)
+        
         show3D2(NDC_o,decimated,"Decimated")
         write_data_ply(decimated,NDC_r_path)
 
@@ -252,16 +254,19 @@ if __name__ == '__main__':
         points=bunny_o + translation
         show3D2(bunny_o,points,"Translated")
         
+        
         # Find the centroid of the cloud and center it
         #centroid = barycentre - utiliser np.mean(points, axis=1) et reshape
         centroid=np.mean(points, axis=1).reshape(3,1)
-        points_cent = points - centroid
-        show3D2(bunny_o,points_cent,"Centered")
+        points = points - centroid
+        show3D2(bunny_o,points,"Centered")
+        
         
         # Echelle
         # points = points divisés par 2
         points= points/2
         show3D2(bunny_o,points,"Scaled")
+        
         
         # Define the rotation matrix (rotation of angle around z-axis)
         # angle de pi/3,
@@ -271,16 +276,20 @@ if __name__ == '__main__':
                     [0, 0, 1]])
         
         # Apply the rotation
-        points=np.dot(R,bunny_o)
+        points=np.dot(R,points)
         # centrer le nuage de points        
         # appliquer la rotation - utiliser la fonction .dot
         # appliquer la translation opposée
         show3D2(bunny_o,points,"Rotated")
         
 
+        points=points - translation + centroid
+        write_data_ply(points,bunny_p_path)
+        
+
     # Meilleure transformation rigide (R,Tr) entre nuages de points
     # -------------------------------------------------------------
-    if True:
+    if False:
         # CONEJO
         show3D2(bunny_o,bunny_p,"Dataset")
         
@@ -306,36 +315,10 @@ if __name__ == '__main__':
         print('Average RMS between points :')
         print('Before = {:.3f}'.format(RMS_before))
         print(' After = {:.3f}'.format(RMS_after))
-        '''
 
-        show3D2(NDC_o,NDC_p,"Dataset")
-        
-        # Find the best transformation
-        R, Tr = best_rigid_transform(NDC_p, NDC_o)
-        
-        
-        # Apply the tranformation
-        opt = R.dot(NDC_p) + Tr
-        NDC_r_opt = opt
-        
-        # Show and save cloud
-        show3D2(NDC_o,NDC_r_opt,"Changed")
-        write_data_ply(NDC_r_opt,NDC_r_path)
-        
-        
-        # Get average distances
-        distances2_before = np.sum(np.power(NDC_p - NDC_o, 2), axis=0)
-        RMS_before = np.sqrt(np.mean(distances2_before))
-        distances2_after = np.sum(np.power(NDC_r_opt - NDC_o, 2), axis=0)
-        RMS_after = np.sqrt(np.mean(distances2_after))
-        
-        print('Average RMS between points :')
-        print('Before = {:.3f}'.format(RMS_before))
-        print(' After = {:.3f}'.format(RMS_after))
-        '''
     # Test ICP and visualize
     # **********************
-    if False:
+    if True:
 
         bunny_p_opt, R_list, T_list, neighbors_list, RMS_list = icp_point_to_point(bunny_p, bunny_o, 25, 1e-4)
         plt.plot(RMS_list)
