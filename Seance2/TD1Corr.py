@@ -20,6 +20,7 @@ def normalisation_points(X_init):
 		point = np.array([x,y,1],np.float32) #Vector de 3x1
 		point_trans = np.dot(Transformation, point)
 		points_norm.append(point_trans)
+	
 
 def select_points(event, x, y, flags, param):
 	global points_selected,X_init
